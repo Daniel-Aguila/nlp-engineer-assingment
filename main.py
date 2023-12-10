@@ -37,8 +37,9 @@ def train_model():
     # TODO: Extract predictions from the model and save it to a
     # variable called `predictions`. Observe the shape of the
     # example random predictions.
+
     golds = np.stack([count_letters(text) for text in test_inputs])
-    predictions = np.random.randint(0, 3, size=golds.shape)
+    predictions = model.predict(test_inputs,size=golds.shape)
 
     # Print the first five inputs, golds, and predictions for analysis
     for i in range(5):
