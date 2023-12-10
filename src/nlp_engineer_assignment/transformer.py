@@ -32,11 +32,11 @@ class Transformer(nn.Module):
                     positional_embeddings[:,position,i] += torch.cos(position / (10000**(2*i/dimensions))) #for odd dimensions
         return positional_embeddings
 
-    def ScaledDotProductAttention(self,query,key,value,key_dimension=512):
-        
+    def ScaledDotProductAttention(self,query,key,value,dkey=64):
+
         key_transposed = torch.transpose(key,1,2) #Transposed the Key_dimension
         scores = torch.matmul(query,key_transposed) #Perform the the MatMul layer from the paper to create the scores
-        scaled_scores = scores/(key_dimension**0.5) #Scale down the scores by a sqrt of the dimension of key
+        scaled_scores = scores/(dkey**0.5) #Scale down the scores by a sqrt of the dimension of key
         attention_weights = torch.nn.Softmax(scaled_scores) #Apply Softmax layer
         attention_output = torch.matmul(attention_weights,value) #Final MatMul layer between the Value and Final product between Query and Key
         
