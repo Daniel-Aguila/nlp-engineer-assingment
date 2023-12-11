@@ -25,6 +25,9 @@ class Transformer(nn.Module):
         self.relu = nn.ReLU()
         self.linear2 = nn.Linear(in_features=inner_layer,out_features=output_dimension)
 
+        self.gamma = nn.Parameter(torch.ones(output_dimension))
+        self.beta = nn.Parameter(torch.zeros(output_dimension))
+
     def PositionalEncoding(self,embeddings):
         #Since we are adding Positional Encoding to the embeddings, I figure I can just iterate through the embeddings themselves, without
         #having to create a separate tensor
@@ -53,25 +56,39 @@ class Transformer(nn.Module):
 
     #TODO Implement Multi-Head if there is available time and if model does not perform as well
 
+    def LayerNormalization(self,tensor,beta,gamma):
+        epsilon = 1e-9
+        mean = tensor.mean()
+        variance = tensor.var()
+
+        norm = (tensor-mean) / (torch.sqrt(variance) + epsilon)
+        output = (gamma * norm) + beta
+
+        return output
+
     def forward(self,x):
         #positional embedding
         x = self.embedding(x)
-        x = self.PositionalEncoding(x)
+        x1 = self.PositionalEncoding(x)
 
         #self attetion, single head
-        qx = self.q_linear(x)
-        kx = self.k_linear(x)
-        vx = self.v_linear(x)
+        qx = self.q_linear(x1)
+        kx = self.k_linear(x1)
+        vx = self.v_linear(x1)
 
-        x = self.ScaledDotProductAttention(qx,kx,vx)
-        x = self.final_self_attention_linear(x)
+        x2 = self.ScaledDotProductAttention(qx,kx,vx)
+        x2 = self.final_self_attention_linear(x2)
+        #Add + Norm
+        x3 = self.LayerNormalization(x1 + x2)
 
         #feed forward block
-        x = self.linear1(x)
-        x = self.relu(x)
-        x = self.linear2(x)
+        x4 = self.linear1(x3)
+        x4 = self.relu(x4)
+        x4 = self.linear2(x4)
+        #Add + Norm
+        x5 = self.LayerNormalization(x3 + x4)
 
-        return x
+        return x5
 
 def train_classifier(train_inputs):
     # TODO: Implement the training loop for the Transformer model.
