@@ -44,8 +44,7 @@ class Transformer(nn.Module):
         return positional_embeddings
 
     def ScaledDotProductAttention(self,query,key,value,dkey=512):
-
-        key_transposed = torch.transpose(key,1,2) #Transposed the Key_dimension
+        key_transposed = torch.transpose(key,0,1) #Transposed the Key_dimension
         scores = torch.matmul(query,key_transposed) #Perform the the MatMul layer from the paper to create the scores
         scaled_scores = scores/(dkey**0.5) #Scale down the scores by a sqrt of the dimension of key
         attention_weights = torch.nn.Softmax(dim=-1)(scaled_scores) #Apply Softmax to the sequence dimension
@@ -78,21 +77,21 @@ class Transformer(nn.Module):
         x2 = self.ScaledDotProductAttention(qx,kx,vx)
         x2 = self.final_self_attention_linear(x2)
         #Add + Norm
-        x3 = self.LayerNormalization(x1 + x2)
+        x3 = self.LayerNormalization(x1 + x2,beta=self.beta,gamma=self.gamma)
 
         #feed forward block
         x4 = self.linear1(x3)
         x4 = self.relu(x4)
         x4 = self.linear2(x4)
         #Add + Norm
-        x5 = self.LayerNormalization(x3 + x4)
+        x5 = self.LayerNormalization(x3 + x4,beta=self.beta,gamma=self.gamma)
 
         return x5
 
-def train_classifier(train_inputs,train_lebels, epochs=10):
+def train_classifier(train_inputs,train_labels, epochs=10):
     # TODO: Implement the training loop for the Transformer model.
     tensor_inputs = torch.tensor(train_inputs)
-
+    tensor_labels = torch.tensor(train_labels)
     dmodel = 512
     warmup_steps = 4000
     step_num = 0
@@ -110,7 +109,7 @@ def train_classifier(train_inputs,train_lebels, epochs=10):
             optimizer.zero_grad()
 
             outputs = model(input) #get output for the currect batch inputs
-            loss = cross_entropy_loss(outputs,train_lebels[index]) #calculate loss
+            loss = cross_entropy_loss(outputs,tensor_labels[index]) #calculate loss
             print(loss)
             loss.backward()
             optimizer.step()
