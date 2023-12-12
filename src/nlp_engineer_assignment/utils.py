@@ -21,7 +21,6 @@ def count_letters(text: str) -> np.array:
 
     return output
 
-
 def print_line():
     """
     Print a line of dashes

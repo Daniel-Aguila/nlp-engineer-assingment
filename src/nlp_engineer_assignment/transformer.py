@@ -1,8 +1,6 @@
-from turtle import forward
+from cmath import cos, sin
 import torch
 import torch.nn as nn
-
-from nlp_engineer_assignment.utils import score
 
 
 class Transformer(nn.Module):
@@ -12,16 +10,16 @@ class Transformer(nn.Module):
     DO NOT use pre-implemented layers for the architecture, positional encoding or self-attention,
     such as nn.TransformerEncoderLayer, nn.TransformerEncoder, nn.MultiheadAttention, etc.
     """
-    def __init__(self,input_size,output_dimension=512,inner_layer=2048):
+    def __init__(self,output_dimension=512,inner_layer=2048):
         super(Transformer,self).__init__()
         #This facilitates the residual connection. All of the model sub-layers and embedding layers produce outputs of dimension dmodel = 512
-        self.embedding = nn.Embedding(num_embeddings=input_size, embedding_dim=output_dimension)
+        self.embedding = nn.Embedding(num_embeddings=output_dimension, embedding_dim=output_dimension)
         self.v_linear = nn.Linear(in_features=output_dimension,out_features=output_dimension)
         self.k_linear = nn.Linear(in_features=output_dimension,out_features=output_dimension)
         self.q_linear = nn.Linear(in_features=output_dimension,out_features=output_dimension)
         self.final_self_attention_linear = nn.Linear(in_features=output_dimension,out_features=output_dimension)
 
-        self.linear1 = nn.Linear(in_features=input_size,out_features=inner_layer)
+        self.linear1 = nn.Linear(in_features=output_dimension,out_features=inner_layer)
         self.relu = nn.ReLU()
         self.linear2 = nn.Linear(in_features=inner_layer,out_features=output_dimension)
 
@@ -31,17 +29,18 @@ class Transformer(nn.Module):
     def PositionalEncoding(self,embeddings):
         #Since we are adding Positional Encoding to the embeddings, I figure I can just iterate through the embeddings themselves, without
         #having to create a separate tensor
-        max_sequence_length = embeddings.shape[1]
-        dimensions = embeddings.shape[2]
+        max_sequence_length = embeddings.shape[0]
+        dimensions = embeddings.shape[1]
         positional_embeddings = embeddings.clone() #to keep names meaningful
         #TODO Study Pytorch to implement a more optimized way to apply the equations without a double for loop.
         #This is really slow with long sequences and high dimensions
         for position in range(max_sequence_length):
             for i in range(dimensions):
                 if i % 2 == 0:
-                    positional_embeddings[:,position,i] += torch.sin(position / (10000**(2*i/dimensions))) #for even dimensions
+                    #real extracts the real part of the complex number
+                    positional_embeddings[position,i] += sin(position / (10000**(2*i/dimensions))).real #for even dimensions
                 else:
-                    positional_embeddings[:,position,i] += torch.cos(position / (10000**(2*i/dimensions))) #for odd dimensions
+                    positional_embeddings[position,i] += cos(position / (10000**(2*i/dimensions))).real #for odd dimensions
         return positional_embeddings
 
     def ScaledDotProductAttention(self,query,key,value,dkey=512):
@@ -90,8 +89,31 @@ class Transformer(nn.Module):
 
         return x5
 
-def train_classifier(train_inputs):
+def train_classifier(train_inputs,train_lebels, epochs=10):
     # TODO: Implement the training loop for the Transformer model.
+    tensor_inputs = torch.tensor(train_inputs)
+
+    dmodel = 512
+    warmup_steps = 4000
+    step_num = 0
+
+    cross_entropy_loss = nn.CrossEntropyLoss()
+    model = Transformer()
+    optimizer = torch.optim.Adam(params=model.parameters(),lr=0,betas=(0.9,0.98))
+
+    for epoch in range(epochs):
+        for index,input in enumerate(tensor_inputs):
+            step_num += 1
+            lrate_ = (dmodel**-0.5) * min(step_num**-.5,step_num*warmup_steps**-0.5) 
+            for param_group in optimizer.param_groups: #update learning rate
+                param_group['lr'] = lrate_
+            optimizer.zero_grad()
+
+            outputs = model(input) #get output for the currect batch inputs
+            loss = cross_entropy_loss(outputs,train_lebels[index]) #calculate loss
+            print(loss)
+            loss.backward()
+            optimizer.step()
     raise NotImplementedError(
         "You should implement `train_classifier` in transformer.py"
     )
