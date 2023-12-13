@@ -10,7 +10,7 @@ class Transformer(nn.Module):
     DO NOT use pre-implemented layers for the architecture, positional encoding or self-attention,
     such as nn.TransformerEncoderLayer, nn.TransformerEncoder, nn.MultiheadAttention, etc.
     """
-    def __init__(self,output_dimension=512,inner_layer=2048):
+    def __init__(self,output_dimension=64,inner_layer=2048):
         super(Transformer,self).__init__()
         #This facilitates the residual connection. All of the model sub-layers and embedding layers produce outputs of dimension dmodel = 512
         self.embedding = nn.Embedding(num_embeddings=output_dimension, embedding_dim=output_dimension)
@@ -19,11 +19,12 @@ class Transformer(nn.Module):
         self.q_linear = nn.Linear(in_features=output_dimension,out_features=output_dimension)
         self.final_self_attention_linear = nn.Linear(in_features=output_dimension,out_features=output_dimension)
 
+
         self.dropout = nn.Dropout(0.1)
 
-        self.linear1 = nn.Linear(in_features=output_dimension,out_features=inner_layer)
+        self.linear1 = nn.Linear(in_features=output_dimension,out_features=output_dimension)
         self.relu = nn.ReLU()
-        self.linear2 = nn.Linear(in_features=inner_layer,out_features=output_dimension)
+        self.linear2 = nn.Linear(in_features=output_dimension,out_features=output_dimension)
 
         self.gamma = nn.Parameter(torch.ones(output_dimension))
         self.beta = nn.Parameter(torch.zeros(output_dimension))
@@ -47,7 +48,7 @@ class Transformer(nn.Module):
                     positional_embeddings[position,i] += cos(position / (10000**(2*i/dimensions))).real #for odd dimensions
         return positional_embeddings
 
-    def ScaledDotProductAttention(self,query,key,value,dkey=512):
+    def ScaledDotProductAttention(self,query,key,value,dkey=64):
         key_transposed = torch.transpose(key,0,1) #Transposed the Key_dimension
         scores = torch.matmul(query,key_transposed) #Perform the the MatMul layer from the paper to create the scores
         scaled_scores = scores/(dkey**0.5) #Scale down the scores by a sqrt of the dimension of key
@@ -125,15 +126,29 @@ def train_classifier(train_inputs,train_labels, epochs=5):
 
             output = model(input) #get output for the currect batch inputs
             loss = cross_entropy_loss(output,tensor_labels[index]) #calculate loss
+
             prediction = torch.argmax(torch.softmax(output, dim=1), dim=1)
+            predict_labels.append(prediction)
             correct = (prediction == tensor_labels[index]).sum().item()
             total = len(tensor_labels[index])
             accuracy = correct / total
             print(torch.argmax(torch.softmax(output,dim=1),dim=1),tensor_labels[index],accuracy)
+
             loss.backward()
             optimizer.step()
-        
-    return predict_labels
+    return model
     raise NotImplementedError(
         "You should implement `train_classifier` in transformer.py"
     )
+
+def model_predict(model,test_inputs):
+    tensor_inputs = torch.tensor(test_inputs)
+    predictions = []
+    model.eval()
+    with torch.no_grad():
+        for test_input in tensor_inputs:
+            output = model(test_input)
+            prediction = torch.argmax(torch.softmax(output,dim=1),dim=1)
+            predictions.append(prediction)
+
+    return predictions

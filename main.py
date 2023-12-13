@@ -3,7 +3,7 @@ import os
 import uvicorn
 
 from nlp_engineer_assignment import count_letters, print_line, read_inputs, \
-    score, train_classifier
+    score, train_classifier, model_predict
 
 def tokenize(sequence: str, vocab: np.array) -> np.array:
     token_list = [vocab.index(char) for char in sequence]
@@ -27,9 +27,9 @@ def train_model():
         os.path.join(cur_dir, "data", "train.txt")
     )
 
-    train_lebels = []
+    train_labels = []
     for train_input in train_inputs:
-        train_lebels.append(count_letters(train_input))
+        train_labels.append(count_letters(train_input))
     
     tokens_inputs = []
     for sequence in train_inputs:
@@ -37,7 +37,7 @@ def train_model():
         tokens_inputs.append(numerical_tokenize)
  
  
-    model = train_classifier(tokens_inputs,train_lebels)
+    model = train_classifier(tokens_inputs,train_labels)
 
     ###
     # Test
@@ -50,8 +50,15 @@ def train_model():
     # TODO: Extract predictions from the model and save it to a
     # variable called `predictions`. Observe the shape of the
     # example random predictions.
+    
+    tokens_inputs_test = []
+    for sequence in test_inputs:
+        numerical_tokenize = tokenize(sequence,vocabs)
+        tokens_inputs_test.append(numerical_tokenize)
+ 
+
     golds = np.stack([count_letters(text) for text in test_inputs])
-    predictions = np.random.randint(0, 3, size=golds.shape)
+    predictions = model_predict(model,tokens_inputs_test)
 
     # Print the first five inputs, golds, and predictions for analysis
     for i in range(5):
