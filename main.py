@@ -5,9 +5,16 @@ import uvicorn
 from nlp_engineer_assignment import count_letters, print_line, read_inputs, \
     score, train_classifier, model_predict
 
-def tokenize(sequence: str, vocab: np.array) -> np.array:
+def tokenize(sequence: str, vocab: np.array):
     token_list = [vocab.index(char) for char in sequence]
     return token_list
+
+def preprocess(sequences: str, vocabs: np.array):
+    preprocessed_sequence = []
+    for sequence in sequences:
+        tokenize_sequence = tokenize(sequence,vocabs)
+        preprocessed_sequence.append(tokenize_sequence)
+    return preprocessed_sequence
 
 def train_model():
     cur_dir = os.path.dirname(os.path.abspath(__file__))
@@ -27,38 +34,29 @@ def train_model():
         os.path.join(cur_dir, "data", "train.txt")
     )
 
+    #Get train labels
     train_labels = []
     for train_input in train_inputs:
         train_labels.append(count_letters(train_input))
-    
-    tokens_inputs = []
-    for sequence in train_inputs:
-        numerical_tokenize = tokenize(sequence,vocabs)
-        tokens_inputs.append(numerical_tokenize)
+
+    #preprocess the train inputs by tokenizing with the vocab
+    preprocessed_train_inputs = preprocess(train_inputs,vocabs)
  
- 
-    model = train_classifier(tokens_inputs,train_labels)
+    model = train_classifier(preprocessed_train_inputs,train_labels)
 
     ###
     # Test
     ###
-
     test_inputs = read_inputs(
         os.path.join(cur_dir, "data", "test.txt")
     )
 
-    # TODO: Extract predictions from the model and save it to a
-    # variable called `predictions`. Observe the shape of the
-    # example random predictions.
-    
-    tokens_inputs_test = []
-    for sequence in test_inputs:
-        numerical_tokenize = tokenize(sequence,vocabs)
-        tokens_inputs_test.append(numerical_tokenize)
+    #preprocess the test inputs by tokenizing with the vocab
+    preprocessed_test_inputs = preprocess(test_inputs,vocabs)
  
-
+    #get predictions with the preprocessed test inputs
     golds = np.stack([count_letters(text) for text in test_inputs])
-    predictions = model_predict(model,tokens_inputs_test)
+    predictions = model_predict(model,preprocessed_test_inputs)
 
     # Print the first five inputs, golds, and predictions for analysis
     for i in range(5):
