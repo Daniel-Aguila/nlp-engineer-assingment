@@ -10,7 +10,7 @@ class Transformer(nn.Module):
     DO NOT use pre-implemented layers for the architecture, positional encoding or self-attention,
     such as nn.TransformerEncoderLayer, nn.TransformerEncoder, nn.MultiheadAttention, etc.
     """
-    def __init__(self,output_dimension=64,inner_layer=2048):
+    def __init__(self,output_dimension=64):
         super(Transformer,self).__init__()
         #This facilitates the residual connection. All of the model sub-layers and embedding layers produce outputs of dimension dmodel = 512
         self.embedding = nn.Embedding(num_embeddings=output_dimension, embedding_dim=output_dimension)
@@ -104,8 +104,8 @@ class Transformer(nn.Module):
         output = self.final_layer(x5)
         return output
 
-def train_classifier(train_inputs,train_labels, epochs=5):
-    # TODO: Implement the training loop for the Transformer model.
+def train_classifier(train_inputs,train_labels, epochs=10):
+
     tensor_inputs = torch.tensor(train_inputs)
     tensor_labels = torch.tensor(train_labels,dtype=torch.long)
     dmodel = 512
@@ -116,6 +116,7 @@ def train_classifier(train_inputs,train_labels, epochs=5):
     model = Transformer()
     optimizer = torch.optim.Adam(params=model.parameters(),lr=1e-4,betas=(0.9,0.98))
     predict_labels = []
+
     for epoch in range(epochs):
         for index,input in enumerate(tensor_inputs):
             step_num += 1
@@ -137,9 +138,6 @@ def train_classifier(train_inputs,train_labels, epochs=5):
             loss.backward()
             optimizer.step()
     return model
-    raise NotImplementedError(
-        "You should implement `train_classifier` in transformer.py"
-    )
 
 def model_predict(model,test_inputs):
     tensor_inputs = torch.tensor(test_inputs)

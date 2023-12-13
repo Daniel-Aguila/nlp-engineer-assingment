@@ -1,20 +1,30 @@
 import numpy as np
 import os
 import uvicorn
+import torch
 
 from nlp_engineer_assignment import count_letters, print_line, read_inputs, \
     score, train_classifier, model_predict
 
-def tokenize(sequence: str, vocab: np.array):
-    token_list = [vocab.index(char) for char in sequence]
+def tokenize(sequence: str, vocab: list):
+    token_list = []
+    for char in sequence:
+        if char not in vocab:
+            raise ValueError("Please make sure all the characters in the input string are a-z or space.")
+        else:
+            token_list.append(vocab.index(char))
     return token_list
 
-def preprocess(sequences: str, vocabs: np.array):
-    preprocessed_sequence = []
+def preprocess(sequences: list[str], vocabs: list):
+    preprocessed_sequences = []
     for sequence in sequences:
-        tokenize_sequence = tokenize(sequence,vocabs)
-        preprocessed_sequence.append(tokenize_sequence)
-    return preprocessed_sequence
+        sequence_lower = sequence.lower()
+        tokenize_sequence = tokenize(sequence_lower,vocabs)
+        preprocessed_sequences.append(tokenize_sequence)
+    
+    #it is faster turning np.arrays to tensors, than a list to a tensor
+    preprocessed_sequences = np.array(preprocessed_sequences)
+    return preprocessed_sequences
 
 def train_model():
     cur_dir = os.path.dirname(os.path.abspath(__file__))
@@ -38,6 +48,7 @@ def train_model():
     train_labels = []
     for train_input in train_inputs:
         train_labels.append(count_letters(train_input))
+    train_labels = np.array(train_labels)
 
     #preprocess the train inputs by tokenizing with the vocab
     preprocessed_train_inputs = preprocess(train_inputs,vocabs)
@@ -57,6 +68,8 @@ def train_model():
     #get predictions with the preprocessed test inputs
     golds = np.stack([count_letters(text) for text in test_inputs])
     predictions = model_predict(model,preprocessed_test_inputs)
+    torch.save(model, 'model.pth')
+
 
     # Print the first five inputs, golds, and predictions for analysis
     for i in range(5):
