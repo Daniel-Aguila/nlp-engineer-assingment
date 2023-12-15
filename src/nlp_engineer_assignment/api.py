@@ -31,4 +31,5 @@ async def getPredictionFromText(request: Prediction):
     preprocessed_text = main.preprocess(requestlist)
 
     prediction = model_predict(model,preprocessed_text)
+    #since model_predict returns a list of predictions, if we only have one prediction, we need to get the first item of the list
     return {"prediction": ''.join(str(num) for num in prediction[0].tolist())}

@@ -114,7 +114,6 @@ def train_classifier(train_inputs,train_labels, epochs=5):
     cross_entropy_loss = nn.CrossEntropyLoss()
     model = Transformer()
     optimizer = torch.optim.Adam(params=model.parameters(),lr=1e-4,betas=(0.9,0.98))
-    predict_labels = []
 
     for epoch in range(epochs):
         for index,input in enumerate(tensor_inputs):
@@ -127,15 +126,8 @@ def train_classifier(train_inputs,train_labels, epochs=5):
             output = model(input) #get output for the currect batch inputs
             loss = cross_entropy_loss(output,tensor_labels[index]) #calculate loss
 
-            prediction = torch.argmax(torch.softmax(output, dim=1), dim=1)
-            predict_labels.append(prediction)
-            correct = (prediction == tensor_labels[index]).sum().item()
-            total = len(tensor_labels[index])
-            accuracy = correct / total
-            print(torch.argmax(torch.softmax(output,dim=1),dim=1),tensor_labels[index],accuracy)
-
-            loss.backward()
-            optimizer.step()
+            loss.backward() #backpropagation
+            optimizer.step() #update weights and biases
     return model
 
 def model_predict(model,test_inputs):
