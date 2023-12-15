@@ -1,5 +1,4 @@
 from cmath import cos, sin
-import torchmetrics
 import torch
 import torch.nn as nn
 
@@ -104,7 +103,7 @@ class Transformer(nn.Module):
         output = self.final_layer(x5)
         return output
 
-def train_classifier(train_inputs,train_labels, epochs=10):
+def train_classifier(train_inputs,train_labels, epochs=5):
 
     tensor_inputs = torch.tensor(train_inputs)
     tensor_labels = torch.tensor(train_labels,dtype=torch.long)

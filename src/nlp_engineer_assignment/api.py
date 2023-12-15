@@ -1,12 +1,17 @@
 from fastapi import FastAPI
 from starlette.responses import RedirectResponse
+import torch
+from nlp_engineer_assignment import model_predict
+import main
+from pydantic import BaseModel
+
+model = torch.load("/Users/daguila/nlp-engineer-assignment/model_97.8.pth")
 
 
 app = FastAPI(
     title="NLP Engineer Assignment",
     version="1.0.0"
 )
-
 
 @app.get("/", include_in_schema=False)
 async def index():
@@ -15,7 +20,15 @@ async def index():
     """
     return RedirectResponse(url="/docs")
 
+class Prediction(BaseModel):
+    text: str
 
-# TODO: Add a route to the API that accepts a text input and uses the trained
-# model to predict the number of occurrences of each letter in the text up to
-# that point.
+@app.post("/predictText")
+async def getPredictionFromText(request: Prediction):
+    requestlist = []
+    requestlist.append(request.text)
+    #preprocess is expecting a list of requests
+    preprocessed_text = main.preprocess(requestlist)
+
+    prediction = model_predict(model,preprocessed_text)
+    return {"prediction": ''.join(str(num) for num in prediction[0].tolist())}

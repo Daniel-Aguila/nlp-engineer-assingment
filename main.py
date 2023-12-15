@@ -15,7 +15,9 @@ def tokenize(sequence: str, vocab: list):
             token_list.append(vocab.index(char))
     return token_list
 
-def preprocess(sequences: list[str], vocabs: list):
+def preprocess(sequences: list[str]):
+    vocabs = [chr(ord('a') + i) for i in range(0, 26)] + [' ']
+    
     preprocessed_sequences = []
     for sequence in sequences:
         sequence_lower = sequence.lower()
@@ -34,7 +36,6 @@ def train_model():
     ###
 
     # Constructs the vocabulary as described in the assignment
-    vocabs = [chr(ord('a') + i) for i in range(0, 26)] + [' ']
 
     ###
     # Train
@@ -51,7 +52,7 @@ def train_model():
     train_labels = np.array(train_labels)
 
     #preprocess the train inputs by tokenizing with the vocab
-    preprocessed_train_inputs = preprocess(train_inputs,vocabs)
+    preprocessed_train_inputs = preprocess(train_inputs)
  
     model = train_classifier(preprocessed_train_inputs,train_labels)
 
@@ -63,10 +64,11 @@ def train_model():
     )
 
     #preprocess the test inputs by tokenizing with the vocab
-    preprocessed_test_inputs = preprocess(test_inputs,vocabs)
+    preprocessed_test_inputs = preprocess(test_inputs)
  
     #get predictions with the preprocessed test inputs
     golds = np.stack([count_letters(text) for text in test_inputs])
+    
     predictions = model_predict(model,preprocessed_test_inputs)
     torch.save(model, 'model.pth')
 
