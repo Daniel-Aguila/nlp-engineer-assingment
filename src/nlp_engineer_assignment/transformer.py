@@ -107,7 +107,7 @@ def train_classifier(train_inputs,train_labels, epochs=5):
 
     tensor_inputs = torch.tensor(train_inputs)
     tensor_labels = torch.tensor(train_labels,dtype=torch.long)
-    dmodel = 512
+    learning_rate_step = 512 #in the Transformer paper this is the dmension variable in the learning rate formal
     warmup_steps = 4000
     step_num = 0
 
@@ -118,9 +118,9 @@ def train_classifier(train_inputs,train_labels, epochs=5):
     for epoch in range(epochs):
         for index,input in enumerate(tensor_inputs):
             step_num += 1
-            lrate_ = (dmodel**-0.5) * min(step_num**-.5,step_num*warmup_steps**-0.5) 
+            learning_rate = (learning_rate_step**-0.5) * min(step_num**-.5,step_num*warmup_steps**-0.5) 
             for param_group in optimizer.param_groups: #update learning rate
-                param_group['lr'] = lrate_
+                param_group['lr'] = learning_rate
             optimizer.zero_grad()
 
             output = model(input) #get output for the currect batch inputs
