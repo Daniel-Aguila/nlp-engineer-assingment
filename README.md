@@ -27,3 +27,17 @@ Once you are done with your implementation, you should be able to run the script
 ## Docker
 
 We have also included a Dockerfile in the repository to ensure that it works across different environments. Feel free to use the Dockerfile if it works better for you. You can consult how to work with Dockerfiles at the [Docker documentation](https://docs.docker.com).
+
+## Testing
+
+- Pytest (created and tested with version '7.4.3'
+
+## API import
+
+from pydantic import BaseModel
+to continue with the architecture of FastAPI
+
+## Transformer
+
+from cmath import cos, sin
+to implement the mathematic equations for positional encoding according to the paper: "Attention is all you need"
