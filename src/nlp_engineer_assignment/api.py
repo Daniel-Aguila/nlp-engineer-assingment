@@ -5,7 +5,7 @@ from nlp_engineer_assignment import model_predict
 import main
 from pydantic import BaseModel
 
-model = torch.load("/Users/daguila/nlp-engineer-assignment/model_97.8.pth")
+model = torch.load("model_97.8.pth")
 
 
 app = FastAPI(
